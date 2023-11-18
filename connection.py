@@ -1,52 +1,35 @@
 import socket
 import logging
-import concurrent.futures
 
 logging.basicConfig(level=logging.DEBUG, format="%(message)s")
 
+# Class represents one directional connection
+# NOTE: Either connect or listen must be called. Not both!
 class Connection:
-    def __init__(self, host: str, lport: int, wport: int):
-        self.host = host
+    def connect(self, port: int) -> None:
+        logging.debug(f"Connecting to port {port}")
+        while True:
+            self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            try:
+                self.socket.connect(('localhost', port))
+            except OSError:
+                self.socket.close()
+                continue
 
-        self.listening_port = lport
-        self.writing_port   = wport
+            break
+        logging.info(f"Connection to port {port} established")
 
-        self.lsocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        self.lsocket.bind((self.host, self.listening_port))
-
-        self.MAX_READ_BYTES = 1024
-
-    def establish(self) -> None:
-        with concurrent.futures.ThreadPoolExecutor(max_workers=1) as executor:
-            def create_reading_conn(sock):
-                sock.listen(1)
-                logging.debug(f"Waiting conneciton on port {self.listening_port}")
-                return sock.accept()
-
-            rconn_future = executor.submit(create_reading_conn, self.lsocket)
-
-            logging.debug(f"Connecting to port {self.writing_port}")
-            while True:
-                self.wsocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-                try:
-                    self.wsocket.connect((self.host, self.writing_port))
-                except OSError:
-                    self.wsocket.close()
-                    continue
-
-                break
-
-            logging.debug(f"Connection to port {self.writing_port} established")
-
-            rsock, _ = rconn_future.result()
-            self.rsocket = rsock
-
-            logging.info("Connection established")
-
-            self.lsocket.close()
+    def listen(self, port: int) -> None:
+        lsocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        lsocket.bind(('localhost', port))
+        lsocket.listen(1)
+        logging.debug(f"Waiting conneciton on port {port}")
+        sock, _ = lsocket.accept()
+        logging.debug(f"Connection to port {port} accepted")
+        self.socket = sock
 
     def write(self, data: bytes) -> None:
-        self.wsocket.sendall(data)
+        self.socket.sendall(data)
 
-    def read(self) -> bytes:
-        return self.rsocket.recv(self.MAX_READ_BYTES)
+    def read(self, bytes_num: int) -> bytes:
+        return self.socket.recv(bytes_num)
