@@ -22,10 +22,13 @@ class Connection:
     def listen(self, port: int) -> None:
         lsocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         lsocket.bind(('localhost', port))
+
         lsocket.listen(1)
         logging.debug(f"Waiting conneciton on port {port}")
+
         sock, _ = lsocket.accept()
         logging.debug(f"Connection to port {port} accepted")
+
         self.socket = sock
 
     def write(self, data: bytes) -> None:

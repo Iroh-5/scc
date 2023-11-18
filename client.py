@@ -17,10 +17,10 @@ class Client:
         self.cipher = cipher.Cipher("key")
 
     def initiate_connection(self, other_name: str):
-        self.connect_to_server()
+        self.__connect_to_server__()
         self.__get_key__(other_name)
 
-    def connect_to_server(self):
+    def __connect_to_server__(self):
         conn = self.server_conn
         conn.connect(self.server_list_port)
 
