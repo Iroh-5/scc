@@ -1,4 +1,7 @@
 import struct
+import time
+
+MAX_READ_BYTES = 1024
 
 def pack_data(*data) -> bytes:
     """Packes data into binary format
@@ -51,3 +54,31 @@ def unpack_data(data: bytes) -> list:
             items_list[i] = items_list[i].decode('utf-8')
 
     return items_list
+
+def send_data_enc(cipher, conn, *data):
+    time.sleep(0.5)
+
+    msg = pack_data(*data)
+
+    msg = cipher.encrypt(msg)
+
+    conn.write(msg)
+
+def recv_data_enc(cipher, conn):
+    msg = conn.read(MAX_READ_BYTES)
+
+    msg = cipher.decrypt(msg)
+
+    return unpack_data(msg)
+
+def send_data(conn, *data):
+    time.sleep(0.5)
+
+    msg = pack_data(*data)
+
+    conn.write(msg)
+
+def recv_data(conn):
+    msg = conn.read(MAX_READ_BYTES)
+
+    return unpack_data(msg)

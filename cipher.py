@@ -2,6 +2,9 @@ import sys
 
 class Cipher:
     def __init__(self, key: str):
+        # TODO: There should be key length check
+        # NOTE: Once DES is impletemted, some fixes considering key generation
+        #       in client and server must be done
         self.key = key.encode("utf-8")
 
     def encrypt(self, data: bytearray) -> bytearray:

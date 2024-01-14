@@ -1,38 +1,50 @@
 import socket
 import logging
 
-logging.basicConfig(level=logging.DEBUG, format="%(message)s")
+logging.basicConfig(level=logging.INFO, format="[%(levelname)s] %(message)s")
+
+class EstablishedConnection:
+    def __init__(self, sock):
+        self.sock = sock
+
+    def write(self, data: bytes) -> None:
+        self.sock.sendall(data)
+
+    def read(self, bytes_num: int) -> bytes:
+        return self.sock.recv(bytes_num)
 
 # Class represents one directional connection
 # NOTE: Either connect or listen must be called. Not both!
-class Connection:
+class Connection(EstablishedConnection):
+    def __init__(self):
+        super().__init__(socket.socket)
+
     def connect(self, port: int) -> None:
         logging.debug(f"Connecting to port {port}")
         while True:
-            self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             try:
-                self.socket.connect(('localhost', port))
+                self.sock.connect(('localhost', port))
             except OSError:
-                self.socket.close()
+                self.sock.close()
                 continue
 
             break
-        logging.info(f"Connection to port {port} established")
+        logging.debug(f"Connection to port {port} established")
 
-    def listen(self, port: int) -> None:
-        lsocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        lsocket.bind(('localhost', port))
+    def listen(self, port: int):
+        self.__init_listener__(port)
 
-        lsocket.listen(1)
+        self.lsock.listen(1)
         logging.debug(f"Waiting conneciton on port {port}")
 
-        sock, _ = lsocket.accept()
+        sock, _ = self.lsock.accept()
         logging.debug(f"Connection to port {port} accepted")
 
-        self.socket = sock
+        return EstablishedConnection(sock)
 
-    def write(self, data: bytes) -> None:
-        self.socket.sendall(data)
+    def __init_listener__(self, port):
+        self.lsock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        self.lsock.bind(('localhost', port))
 
-    def read(self, bytes_num: int) -> bytes:
-        return self.socket.recv(bytes_num)
+        Connection.__init_listener__.__code__ = (lambda self, port:None).__code__
